@@ -63,7 +63,6 @@ if __name__ == '__main__':
     print("Data statistics:\n\tn_users:{}, n_items:{}, n_relations:{}, n_entities:{}".format(
         data_generator.n_users, data_generator.n_items, data_generator.n_relations,
         data_generator.n_entities ) )
-    print(config)
 
     t0 = time()
 
