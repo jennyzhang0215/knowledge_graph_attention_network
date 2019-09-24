@@ -35,7 +35,8 @@ def load_pretrained_data(args):
 
 if __name__ == '__main__':
     # get argument settings.
-    tf.random.set_seed(2019)
+    #tf.random.set_seed(2019)
+    tf.set_random_seed(2019)
     np.random.seed(2019)
     args = parse_args()
 
