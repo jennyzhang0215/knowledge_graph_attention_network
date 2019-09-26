@@ -44,7 +44,7 @@ if __name__ == '__main__':
         config['all_r_list'] = data_generator.all_r_list
         config['all_t_list'] = data_generator.all_t_list
         config['all_v_list'] = data_generator.all_v_list
-    print(config)
+    #print(config)
     print("Data statistics:\n\tn_users:{}, n_items:{}, n_relations:{}, n_entities:{}".format(
         data_generator.n_users, data_generator.n_items, data_generator.n_relations,
         data_generator.n_entities ) )
