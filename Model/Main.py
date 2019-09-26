@@ -50,8 +50,6 @@ if __name__ == '__main__':
 
     t0 = time()
     model = KGAT(data_config=config, args=args)
-    saver = tf.train.Saver()
-
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -177,9 +175,7 @@ if __name__ == '__main__':
 
         # *********************************************************
         # save the user & item embeddings for pretraining.
-        if ret['recall'][0] == cur_best_pre_0 and args.save_flag == 1:
-            save_saver.save(sess, weights_save_path + '/weights', global_step=epoch)
-            print('save the weights in path: ', weights_save_path)
+
 
     recs = np.array(rec_loger)
     pres = np.array(pre_loger)
