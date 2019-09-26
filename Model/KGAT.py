@@ -11,8 +11,8 @@ import scipy.sparse as sp
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 class KGAT(object):
-    def __init__(self, data_config, pretrain_data, args):
-        self._parse_args(data_config, pretrain_data, args)
+    def __init__(self, data_config, args):
+        self._parse_args(data_config, args)
         '''
         *********************************************************
         Create Placeholder for Input Data & Dropout.
@@ -51,11 +51,9 @@ class KGAT(object):
 
         self._statistics_params()
 
-    def _parse_args(self, data_config, pretrain_data, args):
+    def _parse_args(self, data_config, args):
         # argument settings
         self.model_type = 'kgat'
-
-        self.pretrain_data = pretrain_data
 
         self.n_users = data_config['n_users']
         self.n_items = data_config['n_items']
@@ -71,6 +69,9 @@ class KGAT(object):
         self.all_r_list = data_config['all_r_list']
         self.all_t_list = data_config['all_t_list']
         self.all_v_list = data_config['all_v_list']
+        print("n_users", self.n_users)
+        print("n_utems", self.n_items)
+        print("n_entities", self.n_entities)
 
         self.adj_uni_type = args.adj_uni_type
 
@@ -117,20 +118,9 @@ class KGAT(object):
 
         initializer = tf.contrib.layers.xavier_initializer()
 
-        if self.pretrain_data is None:
-            all_weights['user_embed'] = tf.Variable(initializer([self.n_users, self.emb_dim]), name='user_embed')
-            all_weights['entity_embed'] = tf.Variable(initializer([self.n_entities, self.emb_dim]), name='entity_embed')
-            print('using xavier initialization')
-        else:
-            all_weights['user_embed'] = tf.Variable(initial_value=self.pretrain_data['user_embed'], trainable=True,
-                                                    name='user_embed', dtype=tf.float32)
-
-            item_embed = self.pretrain_data['item_embed']
-            other_embed = initializer([self.n_entities - self.n_items, self.emb_dim])
-
-            all_weights['entity_embed'] = tf.Variable(initial_value=tf.concat([item_embed, other_embed], 0),
-                                                      trainable=True, name='entity_embed', dtype=tf.float32)
-            print('using pretrained initialization')
+        all_weights['user_embed'] = tf.Variable(initializer([self.n_users, self.emb_dim]), name='user_embed')
+        all_weights['entity_embed'] = tf.Variable(initializer([self.n_entities, self.emb_dim]), name='entity_embed')
+        print('using xavier initialization')
 
         all_weights['relation_embed'] = tf.Variable(initializer([self.n_relations, self.kge_dim]),
                                                     name='relation_embed')
