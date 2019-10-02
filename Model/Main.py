@@ -8,6 +8,7 @@ import tensorflow as tf
 from utility.helper import *
 from utility.batch_test import *
 from time import time
+import numpy as np
 
 from KGAT import KGAT
 
@@ -42,6 +43,7 @@ if __name__ == '__main__':
         "Load the KG triplets."
         config['all_h_list'] = data_generator.all_h_list
         config['all_r_list'] = data_generator.all_r_list
+        print("unique r", np.unique(config['all_r_list']).size, np.unique(config['all_r_list']))
         config['all_t_list'] = data_generator.all_t_list
         config['all_v_list'] = data_generator.all_v_list
     #print(config)

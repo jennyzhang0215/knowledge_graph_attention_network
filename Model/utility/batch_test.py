@@ -132,7 +132,7 @@ def test_one_user(x):
         r, auc = ranklist_by_heapq(user_pos_test, test_items, rating, Ks)
     else:
         r, auc = ranklist_by_sorted(user_pos_test, test_items, rating, Ks)
-    print("r", len(r), sum(r), r)
+    #print("r", len(r), sum(r), r)
     # # .......checking.......
     # try:
     #     assert len(user_pos_test) != 0
@@ -208,7 +208,7 @@ def test(sess, model, users_to_test, drop_flag=False, batch_test_flag=False):
 
         user_batch_rating_uid = zip(rate_batch, user_batch)
         batch_result = pool.map(test_one_user, user_batch_rating_uid)
-        print("batch result", batch_result)
+        #print("batch result", batch_result)
         count += len(batch_result)
 
         for re in batch_result:
