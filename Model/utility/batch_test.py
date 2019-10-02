@@ -47,22 +47,6 @@ USR_NUM, ITEM_NUM = data_generator.n_users, data_generator.n_items
 N_TRAIN, N_TEST = data_generator.n_train, data_generator.n_test
 BATCH_SIZE = args.batch_size
 
-def ranklist_by_heapq(user_pos_test, test_items, rating, Ks):
-    item_score = {}
-    for i in test_items:
-        item_score[i] = rating[i]
-
-    K_max = max(Ks)
-    K_max_item_score = heapq.nlargest(K_max, item_score, key=item_score.get)
-
-    r = []
-    for i in K_max_item_score:
-        if i in user_pos_test:
-            r.append(1)
-        else:
-            r.append(0)
-    auc = 0.
-    return r, auc
 
 def get_auc(item_score, user_pos_test):
     item_score = sorted(item_score.items(), key=lambda kv: kv[1])
@@ -96,6 +80,23 @@ def ranklist_by_sorted(user_pos_test, test_items, rating, Ks):
     auc = get_auc(item_score, user_pos_test)
     return r, auc
 
+
+def ranklist_by_heapq(user_pos_test, test_items, rating, Ks):
+    item_score = {}
+    for i in test_items:
+        item_score[i] = rating[i]
+
+    K_max = max(Ks)
+    K_max_item_score = heapq.nlargest(K_max, item_score, key=item_score.get)
+
+    r = []
+    for i in K_max_item_score:
+        if i in user_pos_test:
+            r.append(1)
+        else:
+            r.append(0)
+    auc = 0.0
+    return r, auc
 
 def get_performance(user_pos_test, r, auc, Ks):
     precision, recall, ndcg, hit_ratio = [], [], [], []
@@ -131,7 +132,7 @@ def test_one_user(x):
         r, auc = ranklist_by_heapq(user_pos_test, test_items, rating, Ks)
     else:
         r, auc = ranklist_by_sorted(user_pos_test, test_items, rating, Ks)
-
+    print("r", len(r), sum(r), r)
     # # .......checking.......
     # try:
     #     assert len(user_pos_test) != 0
@@ -152,7 +153,6 @@ def test(sess, model, users_to_test, drop_flag=False, batch_test_flag=False):
     pool = multiprocessing.Pool(cores)
 
     if args.model_type in ['ripple']:
-
         u_batch_size = BATCH_SIZE
         i_batch_size = BATCH_SIZE // 20
     elif args.model_type in ['fm', 'nfm']:
@@ -174,41 +174,41 @@ def test(sess, model, users_to_test, drop_flag=False, batch_test_flag=False):
 
         user_batch = test_users[start: end]
 
-        if batch_test_flag:
-
-            n_item_batchs = ITEM_NUM // i_batch_size + 1
-            rate_batch = np.zeros(shape=(len(user_batch), ITEM_NUM))
-
-            i_count = 0
-            for i_batch_id in range(n_item_batchs):
-                i_start = i_batch_id * i_batch_size
-                i_end = min((i_batch_id + 1) * i_batch_size, ITEM_NUM)
-
-                item_batch = range(i_start, i_end)
-
-                feed_dict = data_generator.generate_test_feed_dict(model=model,
-                                                                   user_batch=user_batch,
-                                                                   item_batch=item_batch,
-                                                                   drop_flag=drop_flag)
-                i_rate_batch = model.eval(sess, feed_dict=feed_dict)
-                i_rate_batch = i_rate_batch.reshape((-1, len(item_batch)))
-
-                rate_batch[:, i_start: i_end] = i_rate_batch
-                i_count += i_rate_batch.shape[1]
-
-            assert i_count == ITEM_NUM
-
-        else:
-            item_batch = range(ITEM_NUM)
-            feed_dict = data_generator.generate_test_feed_dict(model=model,
-                                                               user_batch=user_batch,
-                                                               item_batch=item_batch,
-                                                               drop_flag=drop_flag)
-            rate_batch = model.eval(sess, feed_dict=feed_dict)
-            rate_batch = rate_batch.reshape((-1, len(item_batch)))
+        # if batch_test_flag:
+        #
+        #     n_item_batchs = ITEM_NUM // i_batch_size + 1
+        #     rate_batch = np.zeros(shape=(len(user_batch), ITEM_NUM))
+        #
+        #     i_count = 0
+        #     for i_batch_id in range(n_item_batchs):
+        #         i_start = i_batch_id * i_batch_size
+        #         i_end = min((i_batch_id + 1) * i_batch_size, ITEM_NUM)
+        #
+        #         item_batch = range(i_start, i_end)
+        #
+        #         feed_dict = data_generator.generate_test_feed_dict(model=model,
+        #                                                            user_batch=user_batch,
+        #                                                            item_batch=item_batch,
+        #                                                            drop_flag=drop_flag)
+        #         i_rate_batch = model.eval(sess, feed_dict=feed_dict)
+        #         i_rate_batch = i_rate_batch.reshape((-1, len(item_batch)))
+        #
+        #         rate_batch[:, i_start: i_end] = i_rate_batch
+        #         i_count += i_rate_batch.shape[1]
+        #
+        #     assert i_count == ITEM_NUM
+        #
+        # else:
+        item_batch = range(ITEM_NUM)
+        feed_dict = data_generator.generate_test_feed_dict(model=model,
+                                                           user_batch=user_batch, item_batch=item_batch,
+                                                           drop_flag=drop_flag)
+        rate_batch = model.eval(sess, feed_dict=feed_dict)
+        rate_batch = rate_batch.reshape((-1, len(item_batch)))
 
         user_batch_rating_uid = zip(rate_batch, user_batch)
         batch_result = pool.map(test_one_user, user_batch_rating_uid)
+        print("batch result", batch_result)
         count += len(batch_result)
 
         for re in batch_result:

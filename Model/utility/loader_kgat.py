@@ -72,6 +72,7 @@ class KGAT_loader(Data):
 
     def _get_relational_lap_list(self):
         def _bi_norm_lap(adj):
+            print("adj", adj.toarray())
             rowsum = np.array(adj.sum(1))
 
             d_inv_sqrt = np.power(rowsum, -0.5).flatten()
@@ -97,6 +98,7 @@ class KGAT_loader(Data):
         else:
             lap_list = [_si_norm_lap(adj) for adj in self.adj_list]
             print('\tgenerate si-normalized adjacency matrix.')
+        print("#lap_list: {}".format(len(lap_list)))
         return lap_list
 
     def _get_all_kg_dict(self):

@@ -38,7 +38,7 @@ if __name__ == '__main__':
     if args.model_type in ['kgat', 'cfkg']:
         "Load the laplacian matrix."
         config['A_in'] = sum(data_generator.lap_list)
-
+        print("A_in", config["A_in"].shape, config["A_in"].nnz)
         "Load the KG triplets."
         config['all_h_list'] = data_generator.all_h_list
         config['all_r_list'] = data_generator.all_r_list
@@ -105,26 +105,22 @@ if __name__ == '__main__':
         Alternative Training for KGAT:
         ... phase 2: to train the KGE method & update the attentive Laplacian matrix.
         """
-        if args.model_type in ['kgat']:
+        n_A_batch = len(data_generator.all_h_list) // args.batch_size_kg + 1
+        if args.use_kge is True:
+            # using KGE method (knowledge graph embedding).
+            for idx in range(n_A_batch):
+                btime = time()
+                A_batch_data = data_generator.generate_train_A_batch()
+                feed_dict = data_generator.generate_train_A_feed_dict(model, A_batch_data)
+                _, batch_loss, batch_kge_loss, batch_reg_loss = model.train_A(sess, feed_dict=feed_dict)
 
-            n_A_batch = len(data_generator.all_h_list) // args.batch_size_kg + 1
+                loss += batch_loss
+                kge_loss += batch_kge_loss
+                reg_loss += batch_reg_loss
 
-            if args.use_kge is True:
-                # using KGE method (knowledge graph embedding).
-                for idx in range(n_A_batch):
-                    btime = time()
-                    A_batch_data = data_generator.generate_train_A_batch()
-                    feed_dict = data_generator.generate_train_A_feed_dict(model, A_batch_data)
-
-                    _, batch_loss, batch_kge_loss, batch_reg_loss = model.train_A(sess, feed_dict=feed_dict)
-
-                    loss += batch_loss
-                    kge_loss += batch_kge_loss
-                    reg_loss += batch_reg_loss
-
-            if args.use_att is True:
-                # updating attentive laplacian matrix.
-                model.update_attentive_A(sess)
+        if args.use_att is True:
+            # updating attentive laplacian matrix.
+            model.update_attentive_A(sess)
 
         if np.isnan(loss) == True:
             print('ERROR: loss@phase2 is nan.')
@@ -133,7 +129,7 @@ if __name__ == '__main__':
         show_step = 10
         if (epoch + 1) % show_step != 0:
             if args.verbose > 0 and epoch % args.verbose == 0:
-                perf_str = 'Epoch %d [%.1fs]: train==[%.5f=%.5f + %.5f + %.5f]' % (
+                perf_str = 'Epoch %d [%.1fs]: train==[loss(%.5f)=base_loss(%.5f) + kge_loss (%.5f) + reg_loss(%.5f)]' % (
                     epoch, time() - t1, loss, base_loss, kge_loss, reg_loss)
                 print(perf_str)
             continue
@@ -144,7 +140,6 @@ if __name__ == '__main__':
         """
         t2 = time()
         users_to_test = list(data_generator.test_user_dict.keys())
-
         ret = test(sess, model, users_to_test, drop_flag=False, batch_test_flag=batch_test_flag)
 
         """
@@ -152,21 +147,19 @@ if __name__ == '__main__':
         Performance logging.
         """
         t3 = time()
-
         loss_loger.append(loss)
         rec_loger.append(ret['recall'])
         pre_loger.append(ret['precision'])
         ndcg_loger.append(ret['ndcg'])
         hit_loger.append(ret['hit_ratio'])
-
         if args.verbose > 0:
-            perf_str = 'Epoch %d [%.1fs + %.1fs]: train==[%.5f=%.5f + %.5f + %.5f], recall=[%.5f, %.5f], ' \
+            perf_str = 'Epoch %d time[%.1fs + %.1fs]: train==[(loss)%.5f=(base_loss)%.5f + (kge_loss)%.5f + (reg_loss)%.5f], ' \
+                       'recall=[%.5f, %.5f], ' \
                        'precision=[%.5f, %.5f], hit=[%.5f, %.5f], ndcg=[%.5f, %.5f]' % \
                        (epoch, t2 - t1, t3 - t2, loss, base_loss, kge_loss, reg_loss, ret['recall'][0], ret['recall'][-1],
                         ret['precision'][0], ret['precision'][-1], ret['hit_ratio'][0], ret['hit_ratio'][-1],
                         ret['ndcg'][0], ret['ndcg'][-1])
             print(perf_str)
-
         cur_best_pre_0, stopping_step, should_stop = early_stopping(ret['recall'][0], cur_best_pre_0,
                                                                     stopping_step, expected_order='acc', flag_step=5)
 
@@ -174,11 +167,8 @@ if __name__ == '__main__':
         # early stopping when cur_best_pre_0 is decreasing for ten successive steps.
         if should_stop == True:
             break
-
         # *********************************************************
         # save the user & item embeddings for pretraining.
-
-
     recs = np.array(rec_loger)
     pres = np.array(pre_loger)
     ndcgs = np.array(ndcg_loger)

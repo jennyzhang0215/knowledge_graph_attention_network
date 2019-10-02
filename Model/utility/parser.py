@@ -59,7 +59,7 @@ def parse_args():
                         help='Keep probability w.r.t. message dropout (i.e., 1-dropout_ratio) for each deep layer. 1: no dropout.')
 
     parser.add_argument('--Ks', nargs='?', default='[20, 40, 60, 80, 100]',
-                        help='Output sizes of every layer')
+                        help='The @K values')
 
     parser.add_argument('--save_flag', type=int, default=0,
                         help='0: Disable model saver, 1: Activate model saver')
