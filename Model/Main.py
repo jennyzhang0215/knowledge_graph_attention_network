@@ -79,7 +79,6 @@ if __name__ == '__main__':
         t1 = time()
         loss, base_loss, kge_loss, reg_loss = 0., 0., 0., 0.
         n_batch = data_generator.n_train // args.batch_size + 1
-        print("data_generator.n_train", data_generator.n_train, "batch_size", args.batch_size, "n_batch", n_batch)
 
         """
         *********************************************************
@@ -109,8 +108,6 @@ if __name__ == '__main__':
         ... phase 2: to train the KGE method & update the attentive Laplacian matrix.
         """
         n_A_batch = len(data_generator.all_h_list) // args.batch_size_kg + 1
-        print("len(data_generator.all_h_list)", len(data_generator.all_h_list),
-              "args.batch_size_kg", args.batch_size_kg, "n_A_batch", n_A_batch)
         if args.use_kge is True:
             # using KGE method (knowledge graph embedding).
             for idx in range(n_A_batch):
