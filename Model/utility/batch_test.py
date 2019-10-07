@@ -147,6 +147,7 @@ def test_one_user(x):
 
 
 def test(sess, model, users_to_test, drop_flag=False, batch_test_flag=False):
+    print(Ks)
     result = {'precision': np.zeros(len(Ks)), 'recall': np.zeros(len(Ks)), 'ndcg': np.zeros(len(Ks)),
               'hit_ratio': np.zeros(len(Ks)), 'auc': 0.}
 
@@ -218,7 +219,7 @@ def test(sess, model, users_to_test, drop_flag=False, batch_test_flag=False):
             result['hit_ratio'] += re['hit_ratio']/n_test_users
             result['auc'] += re['auc']/n_test_users
 
-
+    print(result)
     assert count == n_test_users
     pool.close()
     return result

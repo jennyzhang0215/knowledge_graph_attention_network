@@ -159,8 +159,10 @@ if __name__ == '__main__':
         hit_loger.append(ret['hit_ratio'])
         if args.verbose > 0:
             perf_str = 'Epoch %d time[%.1fs + %.1fs]: train==[(loss)%.5f=(base_loss)%.5f + (kge_loss)%.5f + (reg_loss)%.5f], ' \
-                       'recall=[%.5f, %.5f], ' \
-                       'precision=[%.5f, %.5f], hit=[%.5f, %.5f], ndcg=[%.5f, %.5f]' % \
+                       '\n\trecall=[<@20>%.5f, <@100>%.5f], ' \
+                       '\n\tprecision=[<@20>%.5f, <@100>%.5f], ' \
+                       '\n\thit=[<@20>%.5f, <@100>%.5f], ' \
+                       '\n\tndcg=[<@20>%.5f, <@100>%.5f]' % \
                        (epoch, t2 - t1, t3 - t2, loss, base_loss, kge_loss, reg_loss, ret['recall'][0], ret['recall'][-1],
                         ret['precision'][0], ret['precision'][-1], ret['hit_ratio'][0], ret['hit_ratio'][-1],
                         ret['ndcg'][0], ret['ndcg'][-1])
